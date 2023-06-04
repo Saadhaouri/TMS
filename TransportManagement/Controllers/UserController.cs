@@ -298,7 +298,8 @@ namespace TransportManagement.Controllers
                         TempData["UserMessage"] = SystemUtilites.SendSystemNotification(NotificationType.Error, message);
                         return View(model);
                     }
-                }
+                } 
+                // I THINK HERE IS THE PROBLEM 
                 var resultEditUser = await _userManager.UpdateAsync(userEdit);
                 if (resultEditUser.Succeeded)
                 {

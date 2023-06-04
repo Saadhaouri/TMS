@@ -4,6 +4,7 @@
     ViewBag.Title = "Home - Login";
     Layout = "_HomeIndexLayout";
 }
+/
 <section class="login-form row"   >
     <div class="col-12 mx-auto tm-login-col" >
         <div class="tm-bg-primary-dark tm-block tm-block-h-auto">
@@ -14,10 +15,6 @@
             </div>
             <div class="row mt-2">
                 <div class="col-12">
-
-                    
-                        
-                    
                     <form asp-controller="Account" asp-action="Login" method="post" class="tm-login-form">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div class="cn" style="background-color: red; "  ></div>
