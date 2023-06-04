@@ -1,0 +1,327 @@
+﻿@model PaginationViewModel<RouteViewModel>
+@{
+    List<RouteViewModel> routes = new List<RouteViewModel>();
+    List<LocationViewModel> locations = new List<LocationViewModel>();
+    if (Model.Items != null)
+    {
+        routes = Model.Items.ToList();
+    }
+    if (ViewBag.Locations != null)
+    {
+        locations = ViewBag.Locations as List<LocationViewModel>;
+    }
+    ViewBag.Title = "Route management";
+}
+
+@section Scripts{
+    <script>
+        function confirmDelete(id) {
+            bootbox.confirm({
+                size: "large",
+                message: "Want to delete this shipping route?",
+                buttons: {
+                    cancel: {
+                        label: 'No',
+                        className: 'btn-dark pl-3 pr-3'
+                    },
+                    confirm: {
+                        label: 'Yes',
+                        className: 'btn-danger pr-3 pl-3'
+                    }
+                },
+                callback: async function (result) {
+                    if (result) {
+                        window.location.href = `Route/Delete?routeId=${id}`;
+                    }
+                }
+            })
+        }
+
+        $(document).ready(function () {
+            $('.js-select2-single').select2();
+        });
+
+        const editModal = document.getElementById("editRoute");
+        const editRouteId = document.getElementById("editRouteId");
+        const editRouteDepartureId = document.getElementById("editDeparturePlaceId");
+        const editRouteArrivalId = document.getElementById("editArrivalPlaceId");
+        const editRouteDistance = document.getElementById("editDistance");
+        function editRoute({ target }) {
+            let parentTarget = target.parentElement.parentElement;
+            let children = parentTarget.children;
+            //get arrivalId & departureId
+            let departureId = children[1].firstElementChild.innerText;
+            let arrivalId = children[2].firstElementChild.innerText;
+            //set Id
+            editRouteId.value = parentTarget.id;
+            //set Route with current information
+            editRouteDistance.value = children[3].innerText;
+            $('#editDeparturePlaceId').val(`${departureId}`).trigger('change');
+            $('#editArrivalPlaceId').val(`${arrivalId}`).trigger('change');
+            $("#editRoute").modal();;
+        }
+    </script>
+}
+
+<div class="row">
+    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mx-auto">
+        <div class="tm-bg-primary-dark tm-block tm-block-h-auto row">
+            <div class="col-sm-12 text-danger h5" asp-validation-summary="ModelOnly"></div>
+            <div class="col-sm-12">
+                <h3 class="tm-block-title d-block text-center">MANAGEMENT OF SHIPPING ROUTE</h3>
+            </div>
+            <div>
+                <i class="fas fa-plus-square pr-3 pl-3 pb-1 pt-1 btn--radius btn--primary h3" 
+                   style="font-size: 1.3rem; cursor: pointer" 
+                   data-toggle="modal" 
+                   data-target="#createRoute"></i>
+            </div>
+            <div class="w-100 pagination row mx-auto">
+                <!--Search and pagesize-->
+                <div class="row mr-0 ml-0 pl-0 pr-0 mb-2 col-sm-12 flex-nowrap align-items-center justify-content-between">
+                    <div>
+                        <span class="text-white">Show</span>
+                        <select class="ml-2 mr-2 text-center"
+                                style="min-width:5rem; height: 38px;"
+                                id="pageSize" onchange="changePageSize(this)">
+                            @foreach (var item in Model.PageSizeItem)
+                            {
+                                if (Model.Pager.PageSize == item)
+                                {
+                                    <option name="pageSize" selected value="@item">@item</option>
+                                }
+                                else
+                                {
+                                    <option name="pageSize" value="@item">@item</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    @if (ViewBag.Search != null)
+                    {
+                        <input class="form-control w-25 bg-light text-body" type="search" value="@ViewBag.Search" name="search" onchange="searchKeyword(this)" placeholder="Search" />
+                    }
+                    else
+                    {
+                        <input class="form-control w-25 bg-light text-body" type="search" value="" name="search" onchange="searchKeyword(this)" placeholder="Search" />
+                    }
+                </div>
+                <!--Items of pagination-->
+                <table class="table table-bordered table-hover w-100 table-light">
+                    <thead class="thead-light text-center text-uppercase">
+                        <tr>
+                            <th class="p-0 align-middle">STT</th>
+                            <th class="pr-1 pl-1 align-middle">Departure location</th>
+                            <th class="pr-1 pl-1 align-middle">Destination</th>
+                            <th class="pr-1 pl-1 align-middle" style="max-width: 150px">Route length</th>
+                            <th class="p-0 align-middle" style="width: 20px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < routes.Count; i++)
+                        {
+                            int stt = i + 1;
+                            <tr id="@routes[i].RouteId">
+                                <td class="p-0 text-center">@stt</td>
+                                <td class="p-0 pl-1 pr-1 pt-3 pb-3">
+                                    <span hidden>@routes[i].DeparturePlaceId</span>
+                                    <a class="text-white"
+                                       onclick="editRoute(event)"
+                                       href="javascript:;">@routes[i].DeparturePlace</a>
+                                </td>
+                                <td class="p-0 pl-1 pr-1 pt-3 pb-3">
+                                    <span hidden>@routes[i].ArrivalPlaceId</span>
+                                    <a class="text-white" 
+                                       onclick="editRoute(event)"
+                                       href="javascript:;">@routes[i].ArrivalPlace</a>
+                                </td>
+                                <td class="p-0 pl-1 pr-1 pt-3 pb-3 text-center">
+                                    <a class="text-white" style="max-width: 150px" 
+                                       onclick="editRoute(event)"
+                                       href="javascript:;">@routes[i].Distance</a>
+                                </td>
+                                <td class="p-0 text-center pr-2 pl-2" style="width: 20px">
+                                    <a class="delete-confirm"
+                                       onclick="confirmDelete('@routes[i].RouteId')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <!--Footer of pagination-->
+                <div class="col-sm-12 mt-2 footer-pagination">
+                    <ul class="pagination col-sm-12 justify-content-center" id="pagination">
+                        <li class="page-item"><a class="page-link" asp-controller="Route" asp-action="Index" asp-route-page="1" asp-route-pageSize="@Model.Pager.PageSize" asp-route-search="@ViewBag.Search">First</a></li>
+                        <li class="page-item"><a class="page-link" asp-controller="Route" asp-action="Index" asp-route-page="@Model.Pager.PreviousPage" asp-route-pageSize="@Model.Pager.PageSize" asp-route-search="@ViewBag.Search">Previous</a></li>
+                        @for (int i = Model.Pager.StartPage; i <= Model.Pager.EndPage; i++)
+                        {
+                            <li class="page-item"><a class="page-link" asp-controller="Route" asp-action="Index" asp-route-page="@i" asp-route-pageSize="@Model.Pager.PageSize" asp-route-search="@ViewBag.Search">@i</a></li>
+                        }
+                        <li class="page-item"><a class="page-link" asp-controller="Route" asp-action="Index" asp-route-page="@Model.Pager.NextPage" asp-route-pageSize="@Model.Pager.PageSize" asp-route-search="@ViewBag.Search">Next</a></li>
+                        <li class="page-item"><a class="page-link" asp-controller="Route" asp-action="Index" asp-route-page="@Model.Pager.TotalPages" asp-route-pageSize="@Model.Pager.PageSize" asp-route-search="@ViewBag.Search">Last</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal -->
+<div id="createRoute" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create a new shipping route</h5>
+            </div>
+            <form asp-controller="Route" asp-action="Create" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div>
+                            <label class="control-label text-dark w-25" for="DeparturePlaceId">Departure location</label>
+                            <select class="js-select2-single form-control input-validation-error" 
+                                    type="text" data-val="true" 
+                                    data-val-required="Địa điểm xuất phát không được để trống" 
+                                    id="DeparturePlaceId" name="DeparturePlaceId">
+                                @if (locations.Count > 0)
+                                {
+                                    foreach (var loca in locations)
+                                    {
+                                        <option value="@loca.LocationId">@loca.LocationName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div>
+                            <label class="control-label text-dark w-25" for="ArrivalPlaceId">Destination</label>
+                            <select class="js-select2-single form-control input-validation-error" 
+                                    type="text" data-val="true" 
+                                    data-val-required="Destination location cannot be empty" 
+                                    id="ArrivalPlaceId" name="ArrivalPlaceId">
+                                @if (locations.Count > 0)
+                                {
+                                    foreach (var loca in locations)
+                                    {
+                                        <option value="@loca.LocationId">@loca.LocationName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="w-100">
+                            <label class="control-label text-dark" for="Distance">Route length</label>
+                            <input class="form-control w-100" 
+                                   type="number" 
+                                   data-val="true" 
+                                   data-val-range="The value is not correct, please re-enter it"
+                                   data-val-range-max="2147483647" 
+                                   data-val-range-min="0.1" 
+                                   data-val-required="Route length cannot be empty"
+                                   id="Distance" name="Distance" value="">
+                        </div>
+                        <div class="w-100 d-flex mt-2">
+                            <span class="text-danger field-validation-valid" 
+                                  data-valmsg-for="Distance" 
+                                  data-valmsg-replace="true"></span>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer pb-1 pt-1">
+                    <button class="btn btn--radius btn--primary">Confirm</button>
+                    <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!--Edit Modal -->
+<div id="editRoute" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adjust the shipping route</h5>
+            </div>
+            <form asp-controller="Route" asp-action="Edit" method="post">
+                <input id="editRouteId" type="hidden" name="RouteId" value="" />
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div>
+                            <label class="control-label text-dark d-block" 
+                                   for="editDeparturePlaceId">Departure location</label>
+                            <select class="js-select2-single form-control input-validation-error"
+                                    type="text" data-val="true"
+                                    data-val-required="The starting point cannot be left blank"
+                                    id="editDeparturePlaceId" name="DeparturePlaceId">
+                                @if (locations != null)
+                                {
+                                    @if (locations.Any())
+                                    {
+                                        foreach (var loca in locations)
+                                        {
+                                            <option value="@loca.LocationId">@loca.LocationName</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div>
+                            <label class="control-label text-dark w-25" for="editArrivalPlaceId">Destination</label>
+                            <select class="js-select2-single form-control input-validation-error"
+                                    type="text" data-val="true"
+                                    data-val-required="Destination location cannot be empty"
+                                    id="editArrivalPlaceId" name="ArrivalPlaceId">
+                                @if (locations != null)
+                                {
+                                    @if (locations.Any())
+                                    {
+                                        foreach (var loca in locations)
+                                        {
+                                            <option value="@loca.LocationId">@loca.LocationName</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="w-100">
+                            <label class="control-label text-dark" for="Distance">Route length</label>
+                            <input class="form-control w-100" type="number" 
+                                   data-val="true" data-val-range="The value is not correct, please re-enter it"
+                                   data-val-range-max="2147483647" 
+                                   data-val-range-min="0.1" 
+                                   data-val-required="Route length cannot be empty"
+                                   id="editDistance" name="Distance" value="">
+                        </div>
+                        <div class="w-100 d-flex mt-2">
+                            <label class="control-label text-dark w-25" for="editDistance"></label>
+                            <span class="text-danger field-validation-valid" 
+                                  data-valmsg-for="Distance" 
+                                  data-valmsg-replace="true"></span>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer pb-1 pt-1">
+                    <button class="btn btn--radius btn--primary">Confirm</button>
+                    <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>

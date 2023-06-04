@@ -1,0 +1,210 @@
+﻿@model PaginationViewModel<LocationViewModel>
+@{
+    List<LocationViewModel> locations = new List<LocationViewModel>();
+    if (Model.Items != null)
+    {
+        locations = Model.Items.ToList();
+    }
+    ViewBag.Title = "Location Management";
+}
+
+@section Scripts{
+    <script>
+        function confirmDelete(id) {
+            bootbox.confirm({
+                size: "small",
+                message: "Want to delete this place?",
+                buttons: {
+                    cancel: {
+                        label: 'Are not',
+                        className: 'btn-dark pl-3 pr-3'
+                    },
+                    confirm: {
+                        label: 'Have',
+                        className: 'btn-danger pr-3 pl-3'
+                    }
+                },
+                callback: async function (result) {
+                    if (result) {
+                        window.location.href = `Location/Delete?locationId=${id}`;
+                    }
+                }
+            })
+        }
+
+        const editModal = document.getElementById("editLocation");
+        const editLocaId = document.getElementById("LocationId");
+        const editLocaName = document.getElementById("editLocationName");
+        function editLocation({ target }) {
+            editLocaId.value = target.id;
+            editLocaName.value = target.innerText;
+            $("#editLocation").modal();
+        }
+    </script>
+}
+
+<div class="row">
+    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mx-auto">
+        <div class="tm-bg-primary-dark tm-block tm-block-h-auto row">
+            <div class="col-12">
+                <h3 class="tm-block-title d-block text-center">LOCATION MANAGEMENT US</h3>
+            </div>
+            <div>
+                <i class="fas fa-plus-square pr-3 pl-3 pb-1 pt-1 btn--radius btn--primary h3" 
+                   style="font-size: 1.3rem; cursor: pointer" 
+                   data-toggle="modal" 
+                   data-target="#createLocation"></i>
+            </div>
+            <div class="w-100 pagination row mx-auto">
+                <!--Search and pagesize-->
+                <div class="row mr-0 ml-0 pl-0 pr-0 mb-2 col-sm-12 flex-nowrap align-items-center justify-content-between">
+                    <div>
+                        <span class="text-white">Show</span>
+                        <select class="ml-2 mr-2 text-center"
+                                style="min-width:5rem; height: 38px;"
+                                id="pageSize" onchange="changePageSize(this)">
+                            @foreach (var item in Model.PageSizeItem)
+                            {
+                                if (Model.Pager.PageSize == item)
+                                {
+                                    <option name="pageSize" selected value="@item">@item</option>
+                                }
+                                else
+                                {
+                                    <option name="pageSize" value="@item">@item</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    @if (ViewBag.Search != null)
+                    {
+                        <input class="form-control w-25 bg-light text-body" type="search" value="@ViewBag.Search" name="search" onchange="searchKeyword(this)" placeholder="Search" />
+                    }
+                    else
+                    {
+                        <input class="form-control w-25 bg-light text-body" type="search" value="" name="search" onchange="searchKeyword(this)" placeholder="Search" />
+                    }
+                </div>
+                <!--Items of pagination-->
+                <table class="table table-bordered table-hover w-100 table-light">
+                    <thead class="thead-light text-center text-uppercase">
+                        <tr>
+                            <th class="p-0 align-middle" style="width: 50px">STT</th>
+                            <th class="pr-1 pl-1 align-middle">Place name</th>
+                            <th class="p-0 align-middle" style="width: 20px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < locations.Count; i++)
+                        {
+                            int stt = i + 1;
+                            <tr>
+                                <td class="p-0 text-center" style="width: 50px">@stt</td>
+                                <td class="p-0 pl-1 pr-1 pt-3 pb-3"><a class="text-decoration-none text-white edit-toggle" href="javascript:;" id="@locations[i].LocationId" onclick="editLocation(event)">@locations[i].LocationName</a></td>
+                                <td class="p-0 text-center pr-2 pl-2" style="width: 20px">
+                                    <a class="delete-confirm" onclick="confirmDelete('@locations[i].LocationId')"><i class="fas fa-trash"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <!--Footer of pagination-->
+                <div class="col-12 mt-2">
+                    <ul class="pagination col-12 justify-content-center" id="pagination">
+                        <li class="page-item"><a class="page-link" asp-controller="Location" asp-action="Index" asp-route-page="1" asp-route-pageSize="@Model.Pager.PageSize" asp-route-search="@ViewBag.Search">First</a></li>
+                        <li class="page-item"><a class="page-link" asp-controller="Location" asp-action="Index" asp-route-page="@Model.Pager.PreviousPage" asp-route-pageSize="@Model.Pager.PageSize" asp-route-search="@ViewBag.Search">Previous</a></li>
+                        @for (int i = Model.Pager.StartPage; i <= Model.Pager.EndPage; i++)
+                        {
+                            <li class="page-item"><a class="page-link" asp-controller="Location" asp-action="Index" asp-route-page="@i" asp-route-pageSize="@Model.Pager.PageSize" asp-route-search="@ViewBag.Search">@i</a></li>
+                        }
+                        <li class="page-item"><a class="page-link" asp-controller="Location" asp-action="Index" asp-route-page="@Model.Pager.NextPage" asp-route-pageSize="@Model.Pager.PageSize" asp-route-search="@ViewBag.Search">Next</a></li>
+                        <li class="page-item"><a class="page-link" asp-controller="Location" asp-action="Index" asp-route-page="@Model.Pager.TotalPages" asp-route-pageSize="@Model.Pager.PageSize" asp-route-search="@ViewBag.Search">Last</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal -->
+<div id="createLocation" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create a new location</h5>
+            </div>
+            <form asp-controller="Location" asp-action="Create" method="post">
+                <div class="modal-body">
+                    <div class="input-group col-sm-12 p-0 mb-2">
+                        <div class="col-sm-12 d-flex flex-nowrap">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    Place name
+                                </span>
+                            </div>
+                            <input class="form-control" type="text"
+                                   data-val="true"
+                                   data-val-maxlength="Maximum allowed length is 200 characters"
+                                   data-val-maxlength-max="200"
+                                   data-val-required="Location name cannot be empty"
+                                   id="LocationName" maxlength="200" name="LocationName">
+                        </div>
+                        <span class="text-danger field-validation-valid col-sm-12 mt-2" data-valmsg-for="LocationName" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                <div class="modal-footer pb-1 pt-1">
+                    <button class="btn btn--radius btn--primary">Confirm</button>
+                    <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editLocation" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit location</h5>
+            </div>
+            <form asp-controller="Location" asp-action="Edit" method="post">
+                <input type="hidden" name="LocationId" value="" id="LocationId"/>
+                <div class="modal-body">
+                    <div class="input-group col-12 p-0 mb-2">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">
+                                Place name
+                            </span>
+                        </div>
+                        <input class="form-control" type="text" 
+                               data-val="true"
+                               data-val-maxlength="Maximum allowed length is 200 characters"
+                               data-val-maxlength-max="200"
+                               data-val-required="Location name cannot be empty"
+                               id="editLocationName"
+                               maxlength="200"
+                               name="LocationName">
+                        <span class="text-danger field-validation-valid" 
+                              data-valmsg-for="editLocationName" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                <div class="modal-footer pb-1 pt-1">
+                    <button class="btn btn--radius btn--primary">Confirm</button>
+                    <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    
+</script>

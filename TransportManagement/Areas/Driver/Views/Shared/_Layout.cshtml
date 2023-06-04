@@ -1,0 +1,161 @@
+﻿@inject UserManager<AppIdentityUser> userManager
+@inject SignInManager<AppIdentityUser> signInManager
+@{
+    MessageVM userMessage = new MessageVM();
+    if (TempData["UserMessage"] != null)
+    {
+        userMessage = JsonConvert.DeserializeObject<MessageVM>(TempData["UserMessage"].ToString());
+    }
+    var user = await userManager.GetUserAsync(User);
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>@ViewBag.Title</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700">
+    <!-- https://fonts.google.com/specimen/Roboto -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <!-- https://fontawesome.com/ -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <!-- https://getbootstrap.com/ -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- https://select2.org -->
+    <link rel="stylesheet" href="~/css/templatemo-style.css">
+    <!-- template layout CSS-->
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+
+<body id="reportsPage">
+    <div class="loader-wrapper"></div>
+    <div class="" id="home">
+        <nav class="navbar navbar-expand-xl">
+            <div class="container h-100">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Mobile" asp-area="Driver">
+                    <h1 class="tm-site-title mb-0">AS TRANSPORT </h1>
+                </a>
+                <button class="navbar-toggler ml-auto mr-0" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="fas fa-bars tm-nav-icon"></i>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav mx-auto h-100">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Driver" asp-controller="Home" asp-action="Index">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Work of the day
+                                <span class="sr-only">(current)</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Driver" asp-controller="TransInfo" asp-action="TransFinish">
+                                <i class="fas fa-check-double"></i>
+                                The work has been finished
+                                <span class="sr-only">(current)</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Driver" asp-controller="TransInfo" asp-action="TransNotFinishYet">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Unfinished work
+                                <span class="sr-only">(current)</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Driver" asp-controller="Home" asp-action="ReportAdvances">
+                                <i class="fas fa-money-bill"></i>
+                                Advance refund report
+                                <span class="sr-only">(current)</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <div class="h-100 nav-link d-flex align-items-center">
+                                <a class="d-block text-white p-2 font-weight-bold"
+                                   asp-area="Driver"
+                                   asp-controller="Account"
+                                   asp-action="Profile"
+                                   style="background-color: rgba(45, 159, 255, 0.85); border-radius: 5px; border: 0.5px solid #fff ;  box-shadow: 0px 15px 20px rgba(36, 29, 157, 0.4);
+  ;
+  ">
+                                    @user.FullName
+                                </a>
+                                <a class="d-block text-warning mt-md-2 ml-2 ml-sm-0"
+                                   asp-area="" asp-controller="Account" asp-action="SignOut">
+                                    <b>Log out</b>
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </nav>
+        <main class="container tm-mt-big tm-mb-big position-relative">
+            @if (!String.IsNullOrEmpty(userMessage.Message))
+            {
+                <div classs="container p-2" id="notification-response">
+                    <div class="row no-gutters">
+                        <div class="col-sm-12">
+                            <div class="@userMessage.CssClassName fade show" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    @if (!String.IsNullOrEmpty(userMessage.Message))
+                                    {
+                                        <span aria-hidden="true">&times;</span>
+                                    }
+                                </button>
+                                <h5 class="alert-heading">
+                                    @if (!String.IsNullOrEmpty(userMessage.Message))
+                                    {
+                                        if (userMessage.CssClassName.Contains("success"))
+                                        {
+                                            <i class="fas fa-check-circle" style="font-size:1.8rem"></i>
+                                        }
+                                        if (userMessage.CssClassName.Contains("danger"))
+                                        {
+                                            <i class="fas fa-exclamation-triangle" style="font-size:1.8rem"></i>
+                                        }
+                                    }
+                                    @userMessage.Title
+                                </h5>
+                                <p class="m-0">
+                                    @userMessage.Message
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            @RenderBody()
+        </main>
+        <a asp-controller="Home" asp-action="Mobile"
+           asp-area="Driver" id="HomeMobile"
+           class="btn btn-info d-none" style="border-radius: 5px; margin: 0 5px; display:block">TRỞ VỀ TRANG CHỦ</a>
+        <footer class="tm-footer row tm-mt-small">
+            <div class="col-12 font-weight-light">
+                <p class="text-center text-white mb-0 px-4 small">
+                    Copyright &copy; <b>2018</b> All rights reserved.
+                    Design: <a rel="nofollow noopener" href="https://templatemo.com" class="tm-footer-link">Template Mo</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="~/lib/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="~/lib/jquery-validate/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.5.2/bootbox.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="~/scripts/site.js"></script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+
+</html>

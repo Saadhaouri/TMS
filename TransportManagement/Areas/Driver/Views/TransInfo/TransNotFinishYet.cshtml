@@ -1,0 +1,260 @@
+﻿@model PaginationViewModel<TransInfoViewModel>
+@{
+    List<TransInfoViewModel> transports = new List<TransInfoViewModel>();
+    if (Model.Items != null)
+    {
+        transports = Model.Items.ToList();
+    }
+    ViewBag.Title = "Danh sách chuyến vận chuyển chưa hoàn thành";
+    string inUseStatus = String.Empty;
+    string avalableStatus = String.Empty;
+    //get base Datetime
+    DateTime baseDateTime = new DateTime();
+}
+
+@section Scripts{
+    <script>
+        function confirmDone(id) {
+            bootbox.confirm({
+                size: "small",
+                message: "Which transport would you like to complete?y?",
+                buttons: {
+                    cancel: {
+                        label: 'Không',
+                        className: 'btn-dark pl-3 pr-3'
+                    },
+                    confirm: {
+                        label: 'Có',
+                        className: 'btn-danger pr-3 pl-3'
+                    }
+                },
+                callback: async function (result) {
+                    if (result) {
+                        window.location.href = `/TransInfo/DoneTransInfo?transportId=${id}`;
+                    }
+                }
+            })
+        }
+
+        $(document).ready(function () {
+            $('.js-select2-single').select2();
+        });
+    </script>
+}
+
+<div class="w-100">
+    <div class="">
+        <div class="tm-bg-primary-dark tm-block tm-block-h-auto row pl-1 pr-1 pl-sm-5 pr-sm-5">
+            <div class="col-sm-12 text-danger h5" asp-validation-summary="ModelOnly"></div>
+            <div class="col-sm-12">
+                <h3 class="tm-block-title d-block text-center">SHIPPING MANAGEMENT</h3>
+            </div>
+            <div>
+                <a class="text-decoration-none" asp-controller="TransInfo" asp-action="Create">
+                    <i class="fas fa-plus-square pr-3 pl-3 pb-1 pt-1 btn--radius btn--primary h3"
+                       style="font-size: 1.3rem"></i>
+                </a>
+            </div>
+            <div class="w-100 pagination row mx-auto">
+                <!--Search and pagesize-->
+                <form asp-controller="TransInfo" asp-action="TransNotFinishYet"
+                      class="row mr-0 ml-0 pl-0 pr-0 mb-2 col-sm-12 align-items-center justify-content-between">
+                    <div class="col-12 col-sm-5 pr-0 pl-0">
+                        <span class="text-white">Show</span>
+                        <select class="ml-2 mr-2 text-center"
+                                style="min-width:3rem; height: 38px;"
+                                id="pageSize" onchange="changePageSize(this)" name="PageSize">
+                            @foreach (var item in Model.PageSizeItem)
+                            {
+                                if (Model.Pager.PageSize == item)
+                                {
+                                    <option name="pageSize" selected value="@item">@item</option>
+                                }
+                                else
+                                {
+                                    <option name="pageSize" value="@item">@item</option>
+                                }
+                            }
+                        </select>
+                        @if (Model.Search != null)
+                        {
+                            <input class="form-control bg-light text-body w-auto" type="search"
+                                   value="@Model.Search" id="search" name="Search" onchange="searchKeyword(this)"
+                                   placeholder="Search" style="display: initial !important" />
+                        }
+                        else
+                        {
+                            <input class="form-control bg-light text-body w-auto"
+                                   type="search" id="search" value="" name="Search"
+                                   onchange="searchKeyword(this)" placeholder="Search"
+                                   style="display: initial !important" />
+                        }
+                    </div>
+
+                    <div class="flex-wrap d-flex align-items-center text-white mt-2 mt-sm-0">
+                        <div class="d-flex align-items-center">
+                            <label class="m-0 mr-2" for="start-date-filter" style="width: 40px">From</label>
+                            @if (Model.StartDate != baseDateTime)
+                            {
+                                <input type="date"
+                                       class="date-filter form-control"
+                                       id="start-date-filter" name="StartDate"
+                                       value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+                            }
+                            else
+                            {
+                                <input type="date"
+                                       class="date-filter form-control"
+                                       id="start-date-filter" name="StartDate" value="" />
+                            }
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <label class="m-0 mr-2" for="end-date-filter" style="width: 40px">Arrive</label>
+                            @if (Model.EndDate != baseDateTime)
+                            {
+                                <input type="date" class="date-filter form-control"
+                                       id="end-date-filter" name="EndDate"
+                                       value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+                            }
+                            else
+                            {
+                                <input type="date" class="date-filter form-control" id="end-date-filter" name="EndDate" value="" />
+                            }
+                        </div>
+                        <button class="btn btn-secondary p-1 m-2" style="border-radius: 50%">OK</button>
+                    </div>
+                </form>
+                <!--Filter-->
+                <!--Items of pagination-->
+                <table class="table table-bordered table-hover w-100 table-light">
+                    <thead class="thead-light text-center text-uppercase">
+                        <tr>
+                            <th class="p-0 align-middle">STT</th>
+                            <th class="pr-1 pl-1 align-middle" style="max-width: 100px">Sea of Control</th>
+                            <th class="pr-1 pl-1 align-middle" style="min-width: 80px;">Driver's name</th>
+                            <th class="pr-1 pl-1 align-middle" style="width: 90px">Start day</th>
+                            <th class="pr-1 pl-1 align-middle" style="width: 40px">Status</th>
+                            <th class="p-0 align-middle action" style="width: 70px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < transports.Count; i++)
+                        {
+                            int stt = i + 1;
+                            <tr class="text-center">
+                                <td class="p-0 text-center">@stt</td>
+                                <td class="p-0 pl-1 pr-1 pt-2 pb-2 text-left" style="max-width: 100px">
+                                    <a class="text-white"
+                                       asp-action="Details" asp-controller="TransInfo"
+                                       asp-route-transportId="@transports[i].TransportId">
+                                        @transports[i].VehicleLicensePlate
+                                    </a>
+                                </td>
+                                <td class="p-0 pl-1 pr-1 pt-2 pb-2 text-left text-justify">
+                                    <a class="text-white"
+                                       asp-action="Details" asp-controller="TransInfo"
+                                       asp-route-transportId="@transports[i].TransportId">
+                                        @transports[i].DriverName
+                                    </a>
+                                </td>
+                                <td class="p-0 pl-1 pr-1 pt-2 pb-2" style="width: 90px">
+                                    @SystemUtilites.GetDateTimeFromTimeStamp(transports[i].DateStartLocal).ToString("dd/MM/yyyy")
+                                </td>
+                                <td class="p-0 pl-1 pr-1 pt-2 pb-2" style="width: 40px">
+                                    @if (transports[i].IsCompleted)
+                                    {
+                                        <i class="fas fa-check-square text-success"
+                                           title="Đã hoàn thành"
+                                           style="font-size: 1.3rem"></i>
+                                    }
+                                    else if (transports[i].IsCancel)
+                                    {
+                                        <i class="fas fa-window-close text-danger"
+                                           title="Đã hủy"
+                                           style="font-size: 1.3rem"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-truck-loading text-white"
+                                           title="Đang chuyển hàng"
+                                           style="font-size: 1.3rem"></i>
+                                    }
+                                </td>
+                                <td class="p-0 pr-1 pl-1 text-center action" style="width: 70px">
+                                    <a class="button--edit mr-2"
+                                       asp-controller="TransInfo"
+                                       asp-action="Edit"
+                                       asp-route-transId="@transports[i].TransportId"
+                                       title="Chỉnh sửa">
+                                        <i class="fas fa-pen-square"></i>
+                                    </a>
+                                    <a class="done-confirm"
+                                       href="javascript:;"
+                                       onclick="confirmDone('@transports[i].TransportId')"
+                                       style="font-size: 1.3rem">
+                                        <i class="fas fa-flag-checkered text-light"
+                                           title="Hoàn thành"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <!--Footer of pagination-->
+                <div class="col-sm-12 mt-2 footer-pagination">
+                    <ul class="pagination col-sm-12 justify-content-center" id="pagination">
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="@Url.Action(action: "TransNotFinishYet", controller: "TransInfo",
+                                                    new {Page = 1,
+                                                            Search = Model.Search,
+                                                            PageSize = Model.Pager.PageSize,
+                                                            StartDate = Model.StartDate,
+                                                            EndDate = Model.EndDate
+                                                        })">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="@Url.Action(action: "TransNotFinishYet", controller: "TransInfo",
+                                                    new {PageSize = Model.Pager.PageSize,
+                                                            Search = Model.Search,
+                                                            Page = Model.Pager.PreviousPage,
+                                                            StartDate = Model.StartDate,
+                                                            EndDate = Model.EndDate
+                                                        })">Previous</a>
+                        </li>
+                        @for (int i = Model.Pager.StartPage; i <= Model.Pager.EndPage; i++)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="@Url.Action(action: "TransNotFinishYet", controller: "TransInfo",new { Page = i,
+                                                                                                    Search = Model.Search,
+                                                                                                    PageSize = Model.Pager.PageSize,
+                                                                                                    StartDate = Model.StartDate,
+                                                                                                    EndDate = Model.EndDate
+                                                                                                    })">@i</a>
+                                                                                                </li>
+                                                                                            }
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="@Url.Action(action: "TransNotFinishYet", controller: "TransInfo"
+                                                    , new {Page = Model.Pager.NextPage,
+                                                            Search = Model.Search,
+                                                            PageSize = Model.Pager.PageSize,
+                                                            StartDate = Model.StartDate,
+                                                            EndDate = Model.EndDate})">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action(action: "TransNotFinishYet", controller: "TransInfo",
+                                                                        new {Page = Model.Pager.TotalPages,
+                                                                            Search = Model.Search,
+                                                                            PageSize = Model.Pager.PageSize,
+                                                                            StartDate = Model.StartDate,
+                                                                            EndDate = Model.EndDate})">Last</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
